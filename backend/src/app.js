@@ -3,6 +3,7 @@ import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
 import cookieParser from "cookie-parser";
+import authRoutes from "./routes/auth.routes.js";
 
 const app = express();
 
@@ -36,5 +37,8 @@ app.get("/api/health", (req, res) => {
     timestamp: new Date().toISOString(),
   });
 });
+
+// API Routes
+app.use("/api/auth", authRoutes);
 
 export default app;

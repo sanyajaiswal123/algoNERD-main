@@ -4,6 +4,7 @@ import helmet from "helmet";
 import morgan from "morgan";
 import cookieParser from "cookie-parser";
 import authRoutes from "./routes/auth.routes.js";
+import { notFound, errorHandler } from "./middlewares/error.middleware.js";
 
 const app = express();
 
@@ -40,5 +41,9 @@ app.get("/api/health", (req, res) => {
 
 // API Routes
 app.use("/api/auth", authRoutes);
+
+// Error Handling Middlewares
+app.use(notFound);
+app.use(errorHandler);
 
 export default app;

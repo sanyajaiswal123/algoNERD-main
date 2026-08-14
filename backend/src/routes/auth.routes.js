@@ -10,12 +10,13 @@ import {
   loginValidation,
   validate,
 } from "../validators/auth.validator.js";
+import { protect } from "../middlewares/auth.middleware.js";
 
 const router = express.Router();
 
 router.post("/register", registerValidation, validate, registerController);
 router.post("/login", loginValidation, validate, loginController);
 router.post("/logout", logoutController);
-router.get("/me", getMeController);
+router.get("/me", protect, getMeController);
 
 export default router;

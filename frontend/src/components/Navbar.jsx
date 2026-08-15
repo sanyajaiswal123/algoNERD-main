@@ -1,10 +1,37 @@
 /* eslint-disable no-unused-vars */
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../hooks/useAuth";
 
-export default function StaggeredMenu({ items, socialItems }) {
+export default function StaggeredMenu({ items = [], socialItems = [] }) {
   const [isOpen, setIsOpen] = useState(false);
   const toggleMenu = () => setIsOpen(!isOpen);
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogoutClick = async () => {
+    toggleMenu();
+    await logout();
+    navigate("/login");
+  };
+
+  // Build dynamic menu items combining provided items with Auth actions
+  const dynamicItems = [...items];
+
+  // Remove existing auth links if present in items array to avoid duplicates
+  const baseItems = dynamicItems.filter(
+    (item) =>
+      !["Login", "Register", "Profile", "Logout"].includes(item.label)
+  );
+
+  if (user) {
+    baseItems.push({ label: `Profile (${user.name.split(" ")[0]})`, link: "/profile" });
+    baseItems.push({ label: "Logout", action: handleLogoutClick });
+  } else {
+    baseItems.push({ label: "Login", link: "/login" });
+    baseItems.push({ label: "Register", link: "/register" });
+  }
 
   const menuVariants = {
     closed: { x: "100%", transition: { type: "tween", duration: 0.5 } },
@@ -18,6 +45,15 @@ export default function StaggeredMenu({ items, socialItems }) {
       x: 0,
       transition: { delay: i * 0.1 + 0.3, duration: 0.4 },
     }),
+  };
+
+  const handleItemClick = (item) => {
+    toggleMenu();
+    if (item.action) {
+      item.action();
+    } else if (item.link) {
+      navigate(item.link);
+    }
   };
 
   return (
@@ -71,32 +107,33 @@ export default function StaggeredMenu({ items, socialItems }) {
             }}
           >
             <nav style={{ textAlign: "center" }}>
-              {items.map((item, i) => (
+              {baseItems.map((item, i) => (
                 <motion.div
                   key={i}
                   custom={i}
                   variants={itemVariants}
                   style={{ margin: "20px 0" }}
                 >
-                  <a
-                    href={item.link}
-                    onClick={toggleMenu}
+                  <button
+                    onClick={() => handleItemClick(item)}
                     style={{
+                      background: "none",
+                      border: "none",
+                      cursor: "pointer",
                       fontSize: "2rem",
-                      color: "#fff",
-                      textDecoration: "none",
+                      color: item.label === "Logout" ? "#ef4444" : "#fff",
                       fontFamily: "'Space Grotesk', sans-serif",
                       fontWeight: "700",
                     }}
                   >
                     {item.label}
-                  </a>
+                  </button>
                 </motion.div>
               ))}
 
               <div
                 style={{
-                  marginTop: "10vh",
+                  marginTop: "8vh",
                   display: "flex",
                   gap: "20px",
                   justifyContent: "center",
@@ -105,11 +142,11 @@ export default function StaggeredMenu({ items, socialItems }) {
                 {socialItems.map((social, i) => (
                   <motion.div
                     key={i}
-                    custom={items.length + i}
+                    custom={baseItems.length + i}
                     variants={itemVariants}
                   >
                     <a
-                      onClick={()=>{social.link}}
+                      href={social.link}
                       target="_blank"
                       rel="noreferrer"
                       style={{

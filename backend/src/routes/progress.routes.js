@@ -4,6 +4,8 @@ import {
   updateProgressController,
 } from "../controllers/progress.controller.js";
 import { protect } from "../middlewares/auth.middleware.js";
+import { validate } from "../validators/auth.validator.js";
+import { updateProgressValidation } from "../validators/progress.validator.js";
 
 const router = express.Router();
 
@@ -11,6 +13,6 @@ const router = express.Router();
 router.use(protect);
 
 router.get("/", getProgressController);
-router.put("/", updateProgressController);
+router.put("/", updateProgressValidation, validate, updateProgressController);
 
 export default router;

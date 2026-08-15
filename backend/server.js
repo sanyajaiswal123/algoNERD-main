@@ -6,9 +6,12 @@ dotenv.config();
 
 const PORT = process.env.PORT || 5000;
 
-// Connect to Database and start server
+// Connect to Database asynchronously and start server
 const startServer = async () => {
-  await connectDB();
+  connectDB().catch((err) => {
+    console.warn("[MongoDB Warning] Initial database connection error:", err.message);
+  });
+
   app.listen(PORT, () => {
     console.log(
       `[algoNERD Server] Running in ${

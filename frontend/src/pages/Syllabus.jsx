@@ -3,11 +3,12 @@ import StaggeredMenu from "../components/Navbar";
 import "../css/Syllabus.css";
 import "../css/Landingcss.css";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../hooks/useAuth";
 
 export default function Syllabus() {
   const navigate = useNavigate();
+  const { user, userProgress, toggleQuestionCompletion, clearProgress } = useAuth();
   const [syllabusData, setSyllabusData] = useState([]);
-  const [completed, setCompleted] = useState({});
 
   const menuItems = [
     { label: "Home", link: "/" },
@@ -24,30 +25,28 @@ export default function Syllabus() {
 
   useEffect(() => {
     fetch("/data/syllabus.json")
-      .then(res => res.json())
-      .then(data => setSyllabusData(data))
-      .catch(err => console.error("Error loading syllabus:", err));
-
-    const savedData = localStorage.getItem("completedQuestions");
-    if (savedData) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setCompleted(JSON.parse(savedData));
-    }
+      .then((res) => res.json())
+      .then((data) => setSyllabusData(data))
+      .catch((err) => console.error("Error loading syllabus:", err));
   }, []);
 
-  const toggleCompletion = (id) => {
-    const updated = { ...completed, [id]: !completed[id] };
-    setCompleted(updated);
-    localStorage.setItem("completedQuestions", JSON.stringify(updated));
+  const completedQuestions = userProgress?.completedQuestions || [];
+
+  const handleToggle = (id) => {
+    if (!user) {
+      navigate("/login");
+      return;
+    }
+    toggleQuestionCompletion(id);
   };
 
   const handleClick = (id) => {
     navigate(`/question/${id}`);
   };
 
-  const clearAll = () => {
-    setCompleted({});
-    localStorage.removeItem("completedQuestions");
+  const handleClearAll = () => {
+    if (!user) return;
+    clearProgress();
   };
 
   return (
@@ -64,9 +63,15 @@ export default function Syllabus() {
           From Patterns → DP, build real coding confidence step-by-step.
         </p>
 
-        <button className="clear-btn" onClick={clearAll}>
-          Clear All Progress ❌
-        </button>
+        {user ? (
+          <button className="clear-btn" onClick={handleClearAll}>
+            Clear All Progress ❌
+          </button>
+        ) : (
+          <p style={{ color: "#ffa500", marginTop: "1rem", fontFamily: "'JetBrains Mono', monospace", fontSize: "0.9rem" }}>
+            🔒 Log in to track and save your progress to MongoDB
+          </p>
+        )}
       </section>
 
       <section className="syllabus-content">
@@ -80,8 +85,8 @@ export default function Syllabus() {
                   <div className="problem-link">
                     <input
                       type="checkbox"
-                      checked={!!completed[item.id]}
-                      onChange={() => toggleCompletion(item.id)}
+                      checked={completedQuestions.includes(Number(item.id))}
+                      onChange={() => handleToggle(item.id)}
                       className="checkbox-style"
                     />
 
@@ -98,11 +103,9 @@ export default function Syllabus() {
           </div>
         ))}
 
-        {/* 📌 Footer Coming Soon Message */}
         <div className="syllabus-coming-soon syllabus-card">
           🚀 More questions & categories will be released soon... Stay tuned!
         </div>
-
       </section>
     </div>
   );

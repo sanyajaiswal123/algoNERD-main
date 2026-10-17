@@ -16,7 +16,17 @@ app.use(helmet());
 const clientUrl = process.env.CLIENT_URL || "http://localhost:5173";
 app.use(
   cors({
-    origin: [clientUrl, "http://localhost:5173", "http://127.0.0.1:5173"],
+    origin: (origin, callback) => {
+      if (
+        !origin ||
+        origin === clientUrl ||
+        /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)
+      ) {
+        callback(null, true);
+      } else {
+        callback(null, false);
+      }
+    },
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
